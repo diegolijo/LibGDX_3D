@@ -28,7 +28,7 @@ public class Pantalla implements Screen {
     private ModelInstance instanceEspacio;
     private AssetManager assets;
     private boolean loading;
-    private float vel = 1;
+    private float vel = 0;
     private float radioGiro[] = new float[10];
     private float velocidad = 5;
     private float escala = 5;
@@ -69,6 +69,7 @@ public class Pantalla implements Screen {
         assets.load("marte.obj", Model.class);
         assets.load("luna.obj", Model.class);
         assets.load("dibujo_tierra.obj", Model.class);
+        assets.load("mercurio.obj", Model.class);
         assets.finishLoading();
 
         instanceEspacio = new ModelInstance(assets.get("escenario_espacio.obj", Model.class));
@@ -77,17 +78,19 @@ public class Pantalla implements Screen {
         instance[3] = new ModelInstance(assets.get("marte.obj", Model.class));
         instance[4] = new ModelInstance(assets.get("luna.obj", Model.class));
         instance[5] = new ModelInstance(assets.get("dibujo_tierra.obj", Model.class));
+        instance[6] = new ModelInstance(assets.get("mercurio.obj", Model.class));
         instanceEspacio.transform.setTranslation(0, 0, 0);
 
-        instance[1].transform.setToScaling(0.205f * escala, 0.20f * escala, 0.20f * escala);
+        instance[1].transform.setToScaling(0.20f * escala, 0.20f * escala, 0.20f * escala);
         instance[2].transform.setToScaling(0.15f * escala, 0.15f * escala, 0.15f * escala);
-        instance[3].transform.setToScaling(0.10f * escala, 0.10f * escala, 0.10f * escala);
+        instance[3].transform.setToScaling(0.1f * escala, 0.1f * escala, 0.1f * escala);
         instance[4].transform.setToScaling(0.01f * escala, 0.01f * escala, 0.01f * escala);
         instance[5].transform.setToScaling(0.13f * escala, 0.13f * escala, 0.13f * escala);
-
-        instance[3].transform.setTranslation(10, 0, 0);
-        instance[5].transform.setTranslation(2, 0, 5);
-
+        instance[6].transform.setToScaling(0.2f * escala, 0.2f * escala, 0.2f * escala);
+//
+//        instance[3].transform.setTranslation(10, 0, 0);
+//        instance[5].transform.setTranslation(2, 0, 5);
+//        instance[6].transform.setTranslation(10, 0, 5);
 
     }
 
@@ -109,8 +112,10 @@ public class Pantalla implements Screen {
         instance[1].transform.setTranslation(0, 0, 0);
 
         radioGiro[1] = 14.95f;
-        radioGiro[5] = 13.2f;
+        radioGiro[3] = 13.2f;
         radioGiro[3] = 10.2f;
+        radioGiro[5]= 14.5f;
+        radioGiro[6]= 8.5f;
 
         radioGiro[4] = 0.2f * escala;
         vel += delta / velocidad;
@@ -129,7 +134,7 @@ public class Pantalla implements Screen {
         //girar y posicionar marte
         float xMarte = (float) Math.sin(vel * 1.6f) * radioGiro[3];
         float zMarte = (float) Math.cos(vel * 1.6f) * radioGiro[3] * 0.90f;
-        instance[3].transform.rotate(0, 1, 0, vel / 225);
+        instance[3].transform.rotate(0, 1, 0, vel );
         instance[3].transform.setTranslation(xMarte, 0, zMarte);
 
         //luna
@@ -141,12 +146,18 @@ public class Pantalla implements Screen {
 
 
         //girar y posicionar marte
+
+
         float xVenus = (float) Math.sin(vel * 1.3f) * radioGiro[5];
         float zVenus = (float) Math.cos(vel * 1.3f) * radioGiro[5] * 0.90f;
-        instance[5].transform.rotate(0, 1, 0, vel / 225);
+        instance[5].transform.rotate(0, 1, 0, vel );
         instance[5].transform.setTranslation(xVenus, 0, zVenus);
 
-
+        //girar y posicionar marte
+        float xMercurio = (float) Math.sin(vel * 2.5f) * radioGiro[6];
+        float zMercurio = (float) Math.cos(vel * 2.5f) * radioGiro[6] * 0.90f;
+        instance[6].transform.rotate(0, 1, 0, vel/ 225 );
+        instance[6].transform.setTranslation(xMercurio, 0, zMercurio);
 
 
 
@@ -159,6 +170,7 @@ public class Pantalla implements Screen {
         modelBatch.render(instance[3], environment);
         modelBatch.render(instance[4], environment);
         modelBatch.render(instance[5], environment);
+        modelBatch.render(instance[6], environment);
         modelBatch.end();
     }
 
