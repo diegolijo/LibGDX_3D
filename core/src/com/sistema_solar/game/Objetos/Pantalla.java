@@ -11,7 +11,11 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 
 public class Pantalla implements Screen {
 
@@ -24,7 +28,7 @@ public class Pantalla implements Screen {
     private ModelInstance instanceEspacio;
     private AssetManager assets;
     private boolean loading;
-    private float posicion = 1;
+    private float vel = 1;
     private float radioGiro[] = new float[10];
     private float velocidad = 5;
     private float escala = 5;
@@ -55,46 +59,34 @@ public class Pantalla implements Screen {
 
         environmentEscenario = new Environment();
         environmentEscenario.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
-  //     environmentEscenario.add(new DirectionalLight().set(1f, 1f, 1f, 0f, 0f, 1f));
-
+        //     environmentEscenario.add(new DirectionalLight().set(1f, 1f, 1f, 0f, 0f, 1f));
 
         //Carga de modelos mediante AssetManager
         assets = new AssetManager();
         assets.load("sol.obj", Model.class);
         assets.load("satelite_tierra.obj", Model.class);
         assets.load("escenario_espacio.obj", Model.class);
-        assets.load("huevo.obj", Model.class);
+        assets.load("marte.obj", Model.class);
         assets.load("luna.obj", Model.class);
+        assets.load("dibujo_tierra.obj", Model.class);
         assets.finishLoading();
 
         instanceEspacio = new ModelInstance(assets.get("escenario_espacio.obj", Model.class));
         instance[1] = new ModelInstance(assets.get("sol.obj", Model.class));
         instance[2] = new ModelInstance(assets.get("satelite_tierra.obj", Model.class));
-        instance[3] = new ModelInstance(assets.get("huevo.obj", Model.class));
+        instance[3] = new ModelInstance(assets.get("marte.obj", Model.class));
         instance[4] = new ModelInstance(assets.get("luna.obj", Model.class));
-
+        instance[5] = new ModelInstance(assets.get("dibujo_tierra.obj", Model.class));
         instanceEspacio.transform.setTranslation(0, 0, 0);
 
-        instance[1].transform.setToScaling(0.205f*escala, 0.20f*escala, 0.20f*escala);
-        instance[2].transform.setToScaling(0.15f*escala, 0.15f*escala, 0.15f*escala);
-        instance[3].transform.setToScaling(0.10f*escala, 0.10f*escala, 0.10f*escala);
-        instance[4].transform.setToScaling(0.01f*escala, 0.01f*escala, 0.01f*escala);
+        instance[1].transform.setToScaling(0.205f * escala, 0.20f * escala, 0.20f * escala);
+        instance[2].transform.setToScaling(0.15f * escala, 0.15f * escala, 0.15f * escala);
+        instance[3].transform.setToScaling(0.10f * escala, 0.10f * escala, 0.10f * escala);
+        instance[4].transform.setToScaling(0.01f * escala, 0.01f * escala, 0.01f * escala);
+        instance[5].transform.setToScaling(0.13f * escala, 0.13f * escala, 0.13f * escala);
+
         instance[3].transform.setTranslation(10, 0, 0);
-
-
-
-//        instanceEspacio.transform.setToScaling(5f, 5f, 5f);
-//        instanceEspacio.transform.setToRotation(0, 0, 0, 0);
-//
-//
-//        instance[1].transform.setToScaling(1f, 1f, 1f);
-//        instance[1].transform.setToRotation(0, 0, 0, 0);
-//
-//
-//
-//        instance[2].transform.setToScaling(2f, 2f, 2f);
-//        instance[2].transform.setToRotation(0, 0, 0, 0);
-//        instance[2].transform.setTranslation(2, 0, 6);
+        instance[5].transform.setTranslation(2, 0, 5);
 
 
     }
@@ -112,44 +104,49 @@ public class Pantalla implements Screen {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 
-
-
-
         instanceEspacio.transform.rotate(0, 1, 0, 0.005f);
 
         instance[1].transform.setTranslation(0, 0, 0);
 
         radioGiro[1] = 14.95f;
+        radioGiro[5] = 13.2f;
         radioGiro[3] = 10.2f;
-        radioGiro[4] = 0.2f *escala;
-        posicion += delta / velocidad;
+
+        radioGiro[4] = 0.2f * escala;
+        vel += delta / velocidad;
         float añoTierra = 365.26f;
 
 
         instance[2].transform.rotate(0, 1, 0, 20);
 
 
-        float xTierra = (float) Math.sin(posicion) * radioGiro[1];
-        float zTierra = (float) Math.cos(posicion) * radioGiro[1] * 0.90f;
-
-
-
-
-
-
+        float xTierra = (float) Math.sin(vel) * radioGiro[1];
+        float zTierra = (float) Math.cos(vel) * radioGiro[1] * 0.90f;
         instance[2].transform.setTranslation(xTierra, 0, zTierra);
 
 
-        //girar y posicionar
-        float xGuevo = (float) Math.sin(posicion *1.6f) * radioGiro[3];
-        float zGuevo = (float) Math.cos(posicion *1.6f) * radioGiro[3] * 0.90f;
-        instance[3].transform.rotate(0, 1, 0, posicion/225);
-        instance[3].transform.setTranslation(xGuevo, 0, zGuevo);
 
+        //girar y posicionar marte
+        float xMarte = (float) Math.sin(vel * 1.6f) * radioGiro[3];
+        float zMarte = (float) Math.cos(vel * 1.6f) * radioGiro[3] * 0.90f;
+        instance[3].transform.rotate(0, 1, 0, vel / 225);
+        instance[3].transform.setTranslation(xMarte, 0, zMarte);
 
         //luna
         instance[4].transform.rotate(0, 1, 0, 4.28f);
-        instance[4].transform.setTranslation(xTierra + ((float) Math.sin(posicion * 12.85f) * radioGiro[4]), 0, zTierra + ((float) Math.cos(posicion * 12.85f) * radioGiro[4]));
+        instance[4].transform.setTranslation(xTierra + ((float) Math.sin(vel * 12.85f) * radioGiro[4]), 0, zTierra + ((float) Math.cos(vel * 12.85f) * radioGiro[4]));
+
+
+
+
+
+        //girar y posicionar marte
+        float xVenus = (float) Math.sin(vel * 1.3f) * radioGiro[5];
+        float zVenus = (float) Math.cos(vel * 1.3f) * radioGiro[5] * 0.90f;
+        instance[5].transform.rotate(0, 1, 0, vel / 225);
+        instance[5].transform.setTranslation(xVenus, 0, zVenus);
+
+
 
 
 
@@ -161,6 +158,7 @@ public class Pantalla implements Screen {
         modelBatch.render(instance[2], environment);
         modelBatch.render(instance[3], environment);
         modelBatch.render(instance[4], environment);
+        modelBatch.render(instance[5], environment);
         modelBatch.end();
     }
 
@@ -200,7 +198,8 @@ public class Pantalla implements Screen {
 
 
         modelBatch.dispose();
-
         assets.dispose();
     }
+
+
 }
