@@ -11,11 +11,17 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.btBroadphaseInterface;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.collision.btDbvtBroadphase;
+import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
+import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
+
 
 public class Pantalla implements Screen {
 
@@ -24,27 +30,29 @@ public class Pantalla implements Screen {
     private Environment environment;
     private Environment environmentEscenario;
     private inController camController;
-    private ModelInstance[] instance = new ModelInstance[10];
-    private ModelInstance instanceEspacio;
+    private ModelInstance[] model = new ModelInstance[10];
+    private ModelInstance modelEspacio;
     private AssetManager assets;
-    private boolean loading;
     private float vel = 0;
     private float radioGiro[] = new float[10];
-    private float velocidad = 5;
-    private float escala = 5;
+    private float velocidad = 6;        
+    private float escala = 2;
     //movimiento de camara
     private float z = 5;
     private float y = 20;
     private float x = 50;
+
+    btDiscreteDynamicsWorld dynamicsWorld;
 
 
     public Pantalla() {
 
 
         // eje 23,4f
-
         // 366,26
 
+
+        //---------------------------------------------------------------
         camara3d = new PerspectiveCamera();
         camController = new inController(camara3d);
         Gdx.input.setInputProcessor(camController);
@@ -59,9 +67,9 @@ public class Pantalla implements Screen {
 
         environmentEscenario = new Environment();
         environmentEscenario.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 0.2f));
-        //     environmentEscenario.add(new DirectionalLight().set(1f, 1f, 1f, 0f, 0f, 1f));
+        // environmentEscenario.add(new DirectionalLight().set(1f, 1f, 1f, 0f, 0f, 1f));
 
-        //Carga de modelos mediante AssetManager
+        //Carga de modelos
         assets = new AssetManager();
         assets.load("sol.obj", Model.class);
         assets.load("satelite_tierra.obj", Model.class);
@@ -72,25 +80,24 @@ public class Pantalla implements Screen {
         assets.load("mercurio.obj", Model.class);
         assets.finishLoading();
 
-        instanceEspacio = new ModelInstance(assets.get("escenario_espacio.obj", Model.class));
-        instance[1] = new ModelInstance(assets.get("sol.obj", Model.class));
-        instance[2] = new ModelInstance(assets.get("satelite_tierra.obj", Model.class));
-        instance[3] = new ModelInstance(assets.get("marte.obj", Model.class));
-        instance[4] = new ModelInstance(assets.get("luna.obj", Model.class));
-        instance[5] = new ModelInstance(assets.get("dibujo_tierra.obj", Model.class));
-        instance[6] = new ModelInstance(assets.get("mercurio.obj", Model.class));
-        instanceEspacio.transform.setTranslation(0, 0, 0);
+        modelEspacio = new ModelInstance(assets.get("escenario_espacio.obj", Model.class));
+        model[1] = new ModelInstance(assets.get("sol.obj", Model.class));
+        model[2] = new ModelInstance(assets.get("satelite_tierra.obj", Model.class));
+        model[3] = new ModelInstance(assets.get("marte.obj", Model.class));
+        model[4] = new ModelInstance(assets.get("luna.obj", Model.class));
+        model[5] = new ModelInstance(assets.get("dibujo_tierra.obj", Model.class));
+        model[6] = new ModelInstance(assets.get("mercurio.obj", Model.class));
 
-        instance[1].transform.setToScaling(0.20f * escala, 0.20f * escala, 0.20f * escala);
-        instance[2].transform.setToScaling(0.15f * escala, 0.15f * escala, 0.15f * escala);
-        instance[3].transform.setToScaling(0.1f * escala, 0.1f * escala, 0.1f * escala);
-        instance[4].transform.setToScaling(0.01f * escala, 0.01f * escala, 0.01f * escala);
-        instance[5].transform.setToScaling(0.13f * escala, 0.13f * escala, 0.13f * escala);
-        instance[6].transform.setToScaling(0.2f * escala, 0.2f * escala, 0.2f * escala);
-//
-//        instance[3].transform.setTranslation(10, 0, 0);
-//        instance[5].transform.setTranslation(2, 0, 5);
-//        instance[6].transform.setTranslation(10, 0, 5);
+
+        modelEspacio.transform.setTranslation(0, 0, 0);
+
+        model[1].transform.setToScaling(0.20f * escala, 0.20f * escala, 0.20f * escala);
+        model[2].transform.setToScaling(0.15f * escala, 0.15f * escala, 0.15f * escala);
+        model[3].transform.setToScaling(0.1f * escala, 0.1f * escala, 0.1f * escala);
+        model[4].transform.setToScaling(0.01f * escala, 0.01f * escala, 0.01f * escala);
+        model[5].transform.setToScaling(0.13f * escala, 0.13f * escala, 0.13f * escala);
+        model[6].transform.setToScaling(0.2f * escala, 0.2f * escala, 0.2f * escala);
+
 
     }
 
@@ -107,42 +114,37 @@ public class Pantalla implements Screen {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 
-        instanceEspacio.transform.rotate(0, 1, 0, 0.005f);
+        modelEspacio.transform.rotate(0, 1, 0, 0.005f);
 
-        instance[1].transform.setTranslation(0, 0, 0);
+        model[1].transform.setTranslation(0, 0, 0);
 
-        radioGiro[1] = 14.95f;
-        radioGiro[3] = 13.2f;
-        radioGiro[3] = 10.2f;
-        radioGiro[5]= 14.5f;
-        radioGiro[6]= 8.5f;
+        radioGiro[1] = 16f;
+        radioGiro[3] = 13f;
+        radioGiro[5] = 9f;
+        radioGiro[6] = 7f;
 
         radioGiro[4] = 0.2f * escala;
         vel += delta / velocidad;
         float añoTierra = 365.26f;
 
 
-        instance[2].transform.rotate(0, 1, 0, 20);
+        model[2].transform.rotate(0, 1, 0, 20);
 
 
         float xTierra = (float) Math.sin(vel) * radioGiro[1];
         float zTierra = (float) Math.cos(vel) * radioGiro[1] * 0.90f;
-        instance[2].transform.setTranslation(xTierra, 0, zTierra);
-
+        model[2].transform.setTranslation(xTierra, 0, zTierra);
 
 
         //girar y posicionar marte
         float xMarte = (float) Math.sin(vel * 1.6f) * radioGiro[3];
         float zMarte = (float) Math.cos(vel * 1.6f) * radioGiro[3] * 0.90f;
-        instance[3].transform.rotate(0, 1, 0, vel );
-        instance[3].transform.setTranslation(xMarte, 0, zMarte);
+        model[3].transform.rotate(0, 1, 0, vel);
+        model[3].transform.setTranslation(xMarte, 0, zMarte);
 
         //luna
-        instance[4].transform.rotate(0, 1, 0, 4.28f);
-        instance[4].transform.setTranslation(xTierra + ((float) Math.sin(vel * 12.85f) * radioGiro[4]), 0, zTierra + ((float) Math.cos(vel * 12.85f) * radioGiro[4]));
-
-
-
+        model[4].transform.rotate(0, 1, 0, 4.28f);
+        model[4].transform.setTranslation(xTierra + ((float) Math.sin(vel * 12.85f) * radioGiro[4]), 0, zTierra + ((float) Math.cos(vel * 12.85f) * radioGiro[4]));
 
 
         //girar y posicionar marte
@@ -150,27 +152,24 @@ public class Pantalla implements Screen {
 
         float xVenus = (float) Math.sin(vel * 1.3f) * radioGiro[5];
         float zVenus = (float) Math.cos(vel * 1.3f) * radioGiro[5] * 0.90f;
-        instance[5].transform.rotate(0, 1, 0, vel );
-        instance[5].transform.setTranslation(xVenus, 0, zVenus);
+        model[5].transform.rotate(0, 1, 0, vel);
+        model[5].transform.setTranslation(xVenus, 0, zVenus);
 
         //girar y posicionar marte
         float xMercurio = (float) Math.sin(vel * 2.5f) * radioGiro[6];
         float zMercurio = (float) Math.cos(vel * 2.5f) * radioGiro[6] * 0.90f;
-        instance[6].transform.rotate(0, 1, 0, vel/ 225 );
-        instance[6].transform.setTranslation(xMercurio, 0, zMercurio);
-
-
-
+        model[6].transform.rotate(0, 1, 0, vel / 225);
+        model[6].transform.setTranslation(xMercurio, 0, zMercurio);
 
 
         modelBatch.begin(camara3d);
-        modelBatch.render(instanceEspacio, environmentEscenario);
-        modelBatch.render(instance[1], environment);
-        modelBatch.render(instance[2], environment);
-        modelBatch.render(instance[3], environment);
-        modelBatch.render(instance[4], environment);
-        modelBatch.render(instance[5], environment);
-        modelBatch.render(instance[6], environment);
+        modelBatch.render(modelEspacio, environmentEscenario);
+        modelBatch.render(model[1], environment);
+        modelBatch.render(model[2], environment);
+        modelBatch.render(model[3], environment);
+        modelBatch.render(model[4], environment);
+        modelBatch.render(model[5], environment);
+        modelBatch.render(model[6], environment);
         modelBatch.end();
     }
 

@@ -12,9 +12,6 @@ public class inController extends CameraInputController {
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
         return super.touchDown(x, y, pointer, button);
-
-
-
     }
 }
 

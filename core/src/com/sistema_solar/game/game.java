@@ -3,7 +3,7 @@ package com.sistema_solar.game;
 import com.badlogic.gdx.Game;
 import com.sistema_solar.game.Objetos.Pantalla;
 
-public class principal_Game extends Game {
+public class game extends Game {
 
     private Pantalla pantalla;
 
@@ -12,8 +12,7 @@ public class principal_Game extends Game {
     public void create() {
         pantalla = new Pantalla();
 
-        //	setScreen(pantallaCargaModelosInicial);
-        //	setScreen(pantallaMoverModelos);
+
         setScreen(pantalla);
 
     }
